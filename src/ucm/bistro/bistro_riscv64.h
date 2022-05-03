@@ -17,22 +17,8 @@
 #define UCM_BISTRO_EPILOGUE
 
 typedef struct ucm_bistro_patch {
-    uint32_t reg14;   /* addi x31, x0, (addr>>52)                   */
-    uint32_t reg13;   /* slli x31, x31, 52                          */
-    uint32_t reg12;   /* addi x30, x0, ((addr>>40)&0b111111111111)  */
-    uint32_t reg11;   /* slli x30, x30, 40                          */
-    uint32_t reg10;   /* or   x31, x31, X30                         */
-    uint32_t reg9;    /* addi x29, x0, ((addr>>>28)&0b111111111111) */
-    uint32_t reg8;    /* slli x29, x29, 28                          */
-    uint32_t reg7;    /* or   x31, x31, x29                         */
-    uint32_t reg6;    /* addi x28, x0, ((addr>>>16)&0b111111111111) */
-    uint32_t reg5;    /* slli x28, x28, 16                          */
-    uint32_t reg4;    /* or   x31, x31, x28                         */
-    uint32_t reg3;    /* addi x30, x0, ((addr>>>4)&0b111111111111) */
-    uint32_t reg2;    /* slli x30, x30, 4                           */
-    uint32_t reg1;    /* or   x31, x31, x30                         */
-    uint32_t reg0;    /* ori  x31, x31, (addr&0b1111)               */
-    uint32_t br;      /* br x31 */
+    uint32_t auipc;     /* delta >> 12 x31 */
+    uint32_t jalr;      /* x31, x1, delta  */
 } UCS_S_PACKED ucm_bistro_patch_t;
 
 /**

@@ -52,7 +52,7 @@ typedef struct ucs_rv64_cpuid {
 
 static inline ucs_cpu_model_t ucs_arch_get_cpu_model()
 {
-    return UCS_CPU_MODEL_RV64G;
+    return UCS_CPU_MODEL_RV64IMAFDC;
 }
 
 
