@@ -39,26 +39,31 @@
  *
  * @param[in] _reg  register number (0-31)
  */
-#define AUIPC(_imm, _rd) (((_imm) << 12) + ((_rd) << 7) + (0x17))
+//#define AUIPC(_imm, _rd) (((_imm) << 12) | ((_rd) << 7) | (0x17))
+#define AUIPC(_imm, _rd) (((_imm) ) | ((_rd) << 7) | (0x17))
 
 /**
  * @brief JALR
  *
  */
-#define JALR(_regs, _regd, _imm) (((_imm) << 20) + ((_regs) << 15) + ((_regd) << 7) + (0x67))
+#define JALR(_regs, _regd, _imm) (((_imm) << 20) | ((_regs) << 15) | ((_regd) << 7) | (0x67))
+
 
 ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
                               void **orig_func_p,
                               ucm_bistro_restore_point_t **rp)
 {
-    const ptrdiff_t delta = (ptrdiff_t)( ((uintptr_t)hook) - ((uintptr_t)func_ptr) + 4);
+    const ptrdiff_t delta = (ptrdiff_t)( (hook - func_ptr) );
+    const ptrdiff_t hi = ( ( 0b11111111111111111111 << 12 ) & delta );
+    const ptrdiff_t lo = ( 0b111111111111 & delta );
 
     ucm_bistro_patch_t patch = {
-        .auipc   = AUIPC(delta >> 12, X31),
-        .jalr    = JALR(X31, X1, delta)
+        .auipc   = AUIPC( hi , X31 ),
+        .jalr    = JALR(X31, X1, lo )
     };
 
     ucs_status_t status;
+
     if (orig_func_p != NULL) {
         return UCS_ERR_UNSUPPORTED;
     }
