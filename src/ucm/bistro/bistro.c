@@ -11,11 +11,27 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 #include <ucm/bistro/bistro.h>
 #include <ucm/bistro/bistro_int.h>
 #include <ucs/sys/math.h>
 
+#if defined(__riscv)
+
+#include <ucs/sys/sys.h>
+#include <linux/membarrier.h> /* Definition of MEMBARRIER_* constants */
+#include <sys/syscall.h>      /* Definition of SYS_* constants */
+#include <unistd.h>
+
+static int
+membarrier(int cmd, unsigned int flags, int cpu_id)
+{
+    return syscall(__NR_membarrier, cmd, flags, cpu_id);
+}
+
+#endif
 
 ucs_status_t ucm_bistro_remove_restore_point(ucm_bistro_restore_point_t *rp)
 {
@@ -47,6 +63,10 @@ static ucs_status_t ucm_bistro_protect(void *addr, size_t len, int prot)
 ucs_status_t ucm_bistro_apply_patch(void *dst, void *patch, size_t len)
 {
     ucs_status_t status;
+#if defined(__riscv)
+    const int ncpus = (int)ucs_sys_get_num_cpus();
+    int cpu_itr = 0;
+#endif
 
     status = ucm_bistro_protect(dst, len, UCM_PROT_READ_WRITE_EXEC);
     if (UCS_STATUS_IS_ERR(status)) {
@@ -54,6 +74,12 @@ ucs_status_t ucm_bistro_apply_patch(void *dst, void *patch, size_t len)
     }
 
     memcpy(dst, patch, len);
+
+#if defined(__riscv)
+    for(cpu_itr = 0; cpu_itr < ncpus; ++cpu_itr) { 
+        membarrier(MEMBARRIER_CMD_GLOBAL, 0, cpu_itr);
+    }
+#endif
 
     status = ucm_bistro_protect(dst, len, UCM_PROT_READ_EXEC);
     if (!UCS_STATUS_IS_ERR(status)) {

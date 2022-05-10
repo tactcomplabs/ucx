@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <assert.h>
 
 #include <ucm/bistro/bistro.h>
 #include <ucm/bistro/bistro_int.h>
@@ -31,48 +32,76 @@
  * Register X28-X30 are used for block shifting and masking.
  * Register X0 is always zero */
 #define X31 31
+#define X30 30
+#define X27 27
 #define X0  0
 #define X1  1
 
 /**
- * @brief Add 20 bit immediate to program counter
+ * @brief AUIPC - Add 20 bit immediate to program counter
  *
  * @param[in] _reg  register number (0-31)
  */
-//#define AUIPC(_imm, _rd) (((_imm) << 12) | ((_rd) << 7) | (0x17))
-#define AUIPC(_imm, _rd) (((_imm) ) | ((_rd) << 7) | (0x17))
+#define AUIPC(_imm, _rd) (((_imm) << 12) | ((_rd) << 7) | (0x17))
 
 /**
- * @brief JALR
+ * @brief JALR - Add 12 bit immediate to source register, save to destination register, jump and link from destination register
  *
+ * @param[in] _reg  register number (0-31), @param[out] _reg register number (0-31), @param[imm] 12 bit immmediate value
  */
-#define JALR(_regs, _regd, _imm) (((_imm) << 20) | ((_regs) << 15) | ((_regd) << 7) | (0x67))
+#define JALR(_regs, _regd, _imm) (((_imm) << 20) | ((_regs) << 15) | (0b000 << 12) | ((_regd) << 7) | (0x67))
 
+/**
+ * @brief ADDI - Add 12 bit immediate to source register, save to destination register 
+ *
+ * @param[in] _reg  register number (0-31), @param[out] _reg register number (0-31), @param[imm] 12 bit immmediate value
+ */
+#define ADDI(_regs, _regd, _imm) (((_imm) << 20) | ((_regs) << 15) | (0b000 << 12) | ((_regd) << 7) | (0x13))
+
+/**
+ * @brief LUI - load upper 20 bit immediate to destination register
+ *
+ * @param[in] _reg  register number (0-31), @param[out] _reg register number (0-31), @param[imm] 12 bit immmediate value
+ */
+#define LUI(_regd, _imm) (((_imm) << 12) | ((_regd) << 7) | (0x37))
+
+/**
+ * @brief SLLI - left-shift immediate number of bits in source register into destination register
+ *
+ * @param[in] _reg  register number (0-31), @param[out] _reg register number (0-31), @param[imm] 12 bit immmediate value
+ */
+#define SLLI(_regs, _regd, _imm) (((_imm) << 26) | ((_regs) << 15) | (0b001 << 12) | ((_regd) << 7) | (0x13))
 
 ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
                               void **orig_func_p,
                               ucm_bistro_restore_point_t **rp)
 {
-    const ptrdiff_t delta = (ptrdiff_t)( (hook - func_ptr) );
-    const ptrdiff_t hi = ( ( 0b11111111111111111111 << 12 ) & delta );
-    const ptrdiff_t lo = ( 0b111111111111 & delta );
+    /* u-prefix means upper 64 bits */
+    const uint32_t uhi = ( ( ( 0b11111111111111111111 << 12 ) & (((uintptr_t)hook) >> 32)) );
+    const uint32_t ulo = ( ( ( 0b111111111111 ) & (((uintptr_t)hook) >> 32) ) );
 
-    ucm_bistro_patch_t patch = {
-        .auipc   = AUIPC( hi , X31 ),
-        .jalr    = JALR(X31, X1, lo )
-    };
+    /* l-prefix means lower 64 bits */
+    const uint32_t lhi = ( ( 0b11111111111111111111 << 12 ) & ((uintptr_t)hook) );
+    const uint32_t llo = ( 0b111111111111 & ((uintptr_t)hook) );
 
     ucs_status_t status;
+    ucm_bistro_patch_t patch;
+
+    patch.uhi  = LUI(X31, uhi >> 12); /* load upper 20 bits in 64 range */
+    patch.ulo  = ADDI(X31, X31, ulo); /* load next upper 12 bits in 64 range */
+    patch.sli  = SLLI(X31, X31, 32);  /* shift the upper 32 bits into position */
+    patch.lhi  = LUI(X31, lhi >> 12); /* load the lower 20 bits in the 32 range */
+    patch.jalr = JALR(X31, X1, llo);  /* load the first 12 bits in the 32 range, add them and jump */
 
     if (orig_func_p != NULL) {
         return UCS_ERR_UNSUPPORTED;
     }
 
-    status = ucm_bistro_create_restore_point(func_ptr, sizeof(patch), rp);
+    status = ucm_bistro_create_restore_point(func_ptr, sizeof(ucm_bistro_patch_t), rp);
     if (UCS_STATUS_IS_ERR(status)) {
         return status;
     }
 
-    return ucm_bistro_apply_patch(func_ptr, &patch, sizeof(patch));
+    return ucm_bistro_apply_patch(func_ptr, &patch, sizeof(ucm_bistro_patch_t));
 }
 #endif
