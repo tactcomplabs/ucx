@@ -70,28 +70,29 @@
  *
  * @param[in] _reg  register number (0-31), @param[out] _reg register number (0-31), @param[imm] 12 bit immmediate value
  */
-#define SLLI(_regs, _regd, _imm) (((_imm) << 26) | ((_regs) << 15) | (0b001 << 12) | ((_regd) << 7) | (0x13))
+#define SLLI(_regs, _regd, _imm) (((_imm) << 20) | ((_regs) << 15) | (0b001 << 12) | ((_regd) << 7) | (0x13))
 
 ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
                               void **orig_func_p,
                               ucm_bistro_restore_point_t **rp)
 {
+    const uintptr_t updated_hook = ((uintptr_t)hook);
     /* u-prefix means upper 32 bits of 64 bit integer */
-    const uint32_t uhi = ( ( ( 0b11111111111111111111 << 12 ) & (((uintptr_t)hook) >> 32)) );
-    const uint32_t ulo = ( ( ( 0b111111111111 ) & (((uintptr_t)hook) >> 32) ) );
+    const uint32_t uhi = ( ( ( 0b11111111111111111111 << 12 ) & (updated_hook >> 32)) );
+    const uint32_t ulo = ( ( ( 0b111111111111 ) & (updated_hook >> 32) ) );
 
     /* l-prefix means lower 32 bits of 64 bit integer */
-    const uint32_t lhi = ( ( 0b11111111111111111111 << 12 ) & ((uintptr_t)hook) );
-    const uint32_t llo = ( 0b111111111111 & ((uintptr_t)hook) );
+    const uint32_t lhi = ( ( 0b11111111111111111111 << 12 ) & updated_hook );
+    const uint32_t llo = ( 0b111111111111 & updated_hook );
 
     ucs_status_t status;
-    ucm_bistro_patch_t patch;
-
-    patch.uhi  = LUI(X31, uhi >> 12); /* load upper 20 bits in 64 range */
-    patch.ulo  = ADDI(X31, X31, ulo); /* load next upper 12 bits in 64 range */
-    patch.sli  = SLLI(X31, X31, 32);  /* shift the upper 32 bits into position */
-    patch.lhi  = LUI(X31, lhi >> 12); /* load the lower 20 bits in the 32 range */
-    patch.jalr = JALR(X31, X1, llo);  /* load the first 12 bits in the 32 range, add them and jump */
+    ucm_bistro_patch_t patch = {
+        .uhi  = LUI(X31, uhi >> 12),       /* load upper 20 bits in 64 range */
+        .ulo  = ADDI(X31, X31, ulo),       /* load next upper 12 bits in 64 range */
+        .sli  = SLLI(X31, X31, 32),        /* shift the upper 32 bits into position */
+        .lhi  = ADDI(X31, X31, lhi >> 12), /* load the lower 20 bits in the 32 range */
+        .jalr = JALR(X31, X1, llo)         /* load the first 12 bits in the 32 range, add them and jump */
+    };
 
     if (orig_func_p != NULL) {
         return UCS_ERR_UNSUPPORTED;
