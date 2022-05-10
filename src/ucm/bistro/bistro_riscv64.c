@@ -76,11 +76,11 @@ ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
                               void **orig_func_p,
                               ucm_bistro_restore_point_t **rp)
 {
-    /* u-prefix means upper 64 bits */
+    /* u-prefix means upper 32 bits of 64 bit integer */
     const uint32_t uhi = ( ( ( 0b11111111111111111111 << 12 ) & (((uintptr_t)hook) >> 32)) );
     const uint32_t ulo = ( ( ( 0b111111111111 ) & (((uintptr_t)hook) >> 32) ) );
 
-    /* l-prefix means lower 64 bits */
+    /* l-prefix means lower 32 bits of 64 bit integer */
     const uint32_t lhi = ( ( 0b11111111111111111111 << 12 ) & ((uintptr_t)hook) );
     const uint32_t llo = ( 0b111111111111 & ((uintptr_t)hook) );
 
