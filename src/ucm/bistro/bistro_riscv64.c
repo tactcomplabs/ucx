@@ -116,12 +116,8 @@ ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
         if(nbits < 20) { hi = 0; }
     }
 
-    if(hi == 0) {
-        delta = lo;
-    }
-
-    patch.auipc = LUI(X31, hi >> 12);
-    patch.jalr  = JALR(X31, X0, delta);
+    patch.auipc = AUIPC(hi >> 12, X31);
+    patch.jalr  = JALR(X31, X0, lo);
 
     if (orig_func_p != NULL) {
         return UCS_ERR_UNSUPPORTED;
