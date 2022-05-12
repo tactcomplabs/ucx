@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <assert.h>
 
 #include <ucm/bistro/bistro.h>
@@ -78,6 +79,7 @@
  * @param[in] _reg  register number (0-31), @param[out] _reg register number (0-31), @param[imm] 12 bit immmediate value
  */
 #define ORI(_regs, _regd, _imm) (((_imm) << 20) | ((_regs) << 15) | (0b110 << 12) | ((_regd) << 7) | (0x13))
+#define XORI(_regs, _regd, _imm) (((_imm) << 20) | ((_regs) << 15) | (0b100 << 12) | ((_regd) << 7) | (0x13))
 
 ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
                               void **orig_func_p,
@@ -103,8 +105,10 @@ ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
     //};
 
     uint32_t delta = (uint32_t)( ( hook - func_ptr ) ) + 4;
-    const uint32_t lo = ( 0b111111111111 & delta );
+    uint32_t lo = ( 0b111111111111 & delta );
     uint32_t hi = ( ( 0b11111111111111111111 << 12 ) & delta );
+    const bool losigned = ( 0b100000000000 & lo );
+    uint32_t orimm = 0;
 
     ucs_status_t status;
     ucm_bistro_patch_t patch;
@@ -116,7 +120,13 @@ ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
         if(nbits < 20) { hi = 0; }
     }
 
+    if(losigned) {
+        lo = 0b100000000000 ^ lo;
+	orimm = 0b100000000000;
+    }
+
     patch.auipc = AUIPC(hi >> 12, X31);
+    patch.xori = ORI(X31, X31, orimm);
     patch.jalr  = JALR(X31, X0, lo);
 
     if (orig_func_p != NULL) {

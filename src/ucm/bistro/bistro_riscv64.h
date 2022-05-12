@@ -18,6 +18,7 @@
 
 typedef struct ucm_bistro_patch {
     uint32_t auipc;
+    uint32_t xori;
     uint32_t jalr;
     /*
     uint32_t uhi;
