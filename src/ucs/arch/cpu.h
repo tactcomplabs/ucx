@@ -102,6 +102,9 @@ typedef struct ucs_cpu_builtin_memcpy {
 #elif defined(__aarch64__)
 #  include "aarch64/cpu.h"
 #elif defined(__riscv)
+#  ifdef HAVE___CLEAR_CACHE
+#  undef HAVE___CLEAR_CACHE
+#  endif
 #  include "riscv/cpu.h"
 #else
 #  error "Unsupported architecture"

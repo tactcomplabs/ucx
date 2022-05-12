@@ -17,11 +17,15 @@
 #define UCM_BISTRO_EPILOGUE
 
 typedef struct ucm_bistro_patch {
+    uint32_t auipc;
+    uint32_t jalr;
+    /*
     uint32_t uhi;
     uint32_t ulo;
     uint32_t sli;
     uint32_t lhi;
     uint32_t jalr;
+    */
 } UCS_S_PACKED ucm_bistro_patch_t;
 
 /**

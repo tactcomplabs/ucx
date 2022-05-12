@@ -14,6 +14,7 @@
 #include <ucs/config/global_opts.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/cachectl.h>
 
 BEGIN_C_DECLS
 
@@ -71,6 +72,13 @@ static inline ucs_status_t ucs_arch_get_cache_size(size_t *cache_sizes)
 {
     return UCS_ERR_UNSUPPORTED;
 }
+
+#if !HAVE___CLEAR_CACHE
+static inline void ucs_arch_clear_cache(void *start, void *end)
+{
+    __riscv_flush_icache(start, end, 0);
+}
+#endif
 
 static inline uint64_t ucs_arch_read_hres_clock()
 {

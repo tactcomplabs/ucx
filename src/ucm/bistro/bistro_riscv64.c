@@ -72,27 +72,56 @@
  */
 #define SLLI(_regs, _regd, _imm) (((_imm) << 20) | ((_regs) << 15) | (0b001 << 12) | ((_regd) << 7) | (0x13))
 
+/**
+ * @brief ORI - or immediate in source register into destination register
+ *
+ * @param[in] _reg  register number (0-31), @param[out] _reg register number (0-31), @param[imm] 12 bit immmediate value
+ */
+#define ORI(_regs, _regd, _imm) (((_imm) << 20) | ((_regs) << 15) | (0b110 << 12) | ((_regd) << 7) | (0x13))
+
 ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
                               void **orig_func_p,
                               ucm_bistro_restore_point_t **rp)
 {
-    const uintptr_t updated_hook = ((uintptr_t)hook);
+    //const uintptr_t updated_hook = ((uintptr_t)hook);
+
     /* u-prefix means upper 32 bits of 64 bit integer */
-    const uint32_t uhi = ( ( ( 0b11111111111111111111 << 12 ) & (updated_hook >> 32)) );
-    const uint32_t ulo = ( ( ( 0b111111111111 ) & (updated_hook >> 32) ) );
+    //const uint32_t uhi = ( ( ( 0b11111111111111111111 << 12 ) & (updated_hook >> 32)) );
+    //const uint32_t ulo = ( ( ( 0b111111111111 ) & (updated_hook >> 32) ) );
 
     /* l-prefix means lower 32 bits of 64 bit integer */
-    const uint32_t lhi = ( ( 0b11111111111111111111 << 12 ) & updated_hook );
-    const uint32_t llo = ( 0b111111111111 & updated_hook );
+    //const uint32_t lhi = ( ( 0b11111111111111111111 << 12 ) & updated_hook );
+    //const uint32_t llo = ( 0b111111111111 & updated_hook );
+
+    //ucs_status_t status;
+    //ucm_bistro_patch_t patch = {
+    //    .uhi  = LUI(X31, uhi >> 12),       /* load upper 20 bits in 64 range */
+    //    .ulo  = ORI(X31, X31, ulo),       /* load next upper 12 bits in 64 range */
+    //    .sli  = SLLI(X31, X31, 32),        /* shift the upper 32 bits into position */
+    //    .lhi  = ORI(X31, X31, lhi >> 12), /* load the lower 20 bits in the 32 range */
+    //    .jalr = JALR(X31, X0, llo)         /* load the first 12 bits in the 32 range, add them and jump */
+    //};
+
+    uint32_t delta = (uint32_t)( ( hook - func_ptr ) ) + 4;
+    const uint32_t lo = ( 0b111111111111 & delta );
+    uint32_t hi = ( ( 0b11111111111111111111 << 12 ) & delta );
 
     ucs_status_t status;
-    ucm_bistro_patch_t patch = {
-        .uhi  = LUI(X31, uhi >> 12),       /* load upper 20 bits in 64 range */
-        .ulo  = ADDI(X31, X31, ulo),       /* load next upper 12 bits in 64 range */
-        .sli  = SLLI(X31, X31, 32),        /* shift the upper 32 bits into position */
-        .lhi  = ADDI(X31, X31, lhi >> 12), /* load the lower 20 bits in the 32 range */
-        .jalr = JALR(X31, X1, llo)         /* load the first 12 bits in the 32 range, add them and jump */
-    };
+    ucm_bistro_patch_t patch;
+
+    uint32_t nbits = 0;
+
+    if(delta < 0) {
+        nbits = log(-delta) / log(2.);
+        if(nbits < 20) { hi = 0; }
+    }
+
+    if(hi == 0) {
+        delta = lo;
+    }
+
+    patch.auipc = LUI(X31, hi >> 12);
+    patch.jalr  = JALR(X31, X0, delta);
 
     if (orig_func_p != NULL) {
         return UCS_ERR_UNSUPPORTED;
