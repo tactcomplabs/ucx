@@ -94,8 +94,13 @@ ucs_status_t ucm_bistro_create_restore_point(void *addr, size_t len,
     *rp              = point;
     point->addr      = addr;
     point->patch_len = len;
+#if defined(__riscv)
+    __sync_synchronize();
     memcpy(point->orig, addr, len);
-
+    __sync_synchronize();
+#else
+    memcpy(point->orig, addr, len);
+#endif
     return UCS_OK;
 }
 
