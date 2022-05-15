@@ -18,7 +18,8 @@
 
 typedef struct ucm_bistro_patch {
     uint32_t addi;
-    uint32_t sd;
+    uint32_t sdra;
+    uint32_t addifp;
     uint32_t auipc;
     uint32_t jalr;
 } UCS_S_PACKED ucm_bistro_patch_t;

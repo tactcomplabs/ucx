@@ -39,6 +39,7 @@
 #define X1  1
 #define X2  2
 #define X5  5
+#define X8  8
 
 /**
  * @brief AUIPC - Add 20 bit immediate to program counter
@@ -95,8 +96,9 @@ ucs_status_t ucm_bistro_patch(void *func_ptr, void *hook, const char *symbol,
     ptrdiff_t delta = (ptrdiff_t)( ( hook - func_ptr ) + 4 );
 
     ucm_bistro_patch_t patch = {
-	.addi  = ADDI(X2, X2, 16),
-	.sd    = SD(X2, X1, 0),
+	.addi    = ADDI(X2, X2, -16),
+	.sdra    = SD(X2, X8, 8),
+	.addifp    = ADDI(X8, X2, 16),
         .auipc = AUIPC( ( (0b11111111111111111111 << 12) & (delta + 0x800) ) >> 12, X31),
         .jalr  = JALR(X31, X0, 0b111111111111 & delta)
     };
