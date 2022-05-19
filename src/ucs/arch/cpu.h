@@ -2,6 +2,7 @@
 * Copyright (C) Mellanox Technologies Ltd. 2001-2015.  ALL RIGHTS RESERVED.
 * Copyright (C) ARM Ltd. 2016.  ALL RIGHTS RESERVED.
 * Copyright (C) Shanghai Zhaoxin Semiconductor Co., Ltd. 2020. ALL RIGHTS RESERVED.
+* Copyright (C) Tactical Computing Labs, LLC. 2022. ALL RIGHTS RESERVED.
 *
 * See file LICENSE for terms.
 */
@@ -35,6 +36,7 @@ typedef enum ucs_cpu_model {
     UCS_CPU_MODEL_ZHAOXIN_ZHANGJIANG,
     UCS_CPU_MODEL_ZHAOXIN_WUDAOKOU,
     UCS_CPU_MODEL_ZHAOXIN_LUJIAZUI,
+    UCS_CPU_MODEL_RV64IMAFDC,
     UCS_CPU_MODEL_LAST
 } ucs_cpu_model_t;
 
@@ -65,6 +67,7 @@ typedef enum ucs_cpu_vendor {
     UCS_CPU_VENDOR_GENERIC_PPC,
     UCS_CPU_VENDOR_FUJITSU_ARM,
     UCS_CPU_VENDOR_ZHAOXIN,
+    UCS_CPU_VENDOR_GENERIC_RISCV,
     UCS_CPU_VENDOR_LAST
 } ucs_cpu_vendor_t;
 
@@ -98,6 +101,11 @@ typedef struct ucs_cpu_builtin_memcpy {
 #  include "ppc64/cpu.h"
 #elif defined(__aarch64__)
 #  include "aarch64/cpu.h"
+#elif defined(__riscv)
+#  ifdef HAVE___CLEAR_CACHE
+#  undef HAVE___CLEAR_CACHE
+#  endif
+#  include "riscv/cpu.h"
 #else
 #  error "Unsupported architecture"
 #endif

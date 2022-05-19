@@ -132,7 +132,9 @@ static void ucm_log_vsnprintf(char *buf, size_t max, const char *fmt, va_list ap
     int pad;
     int base;
     int eno;
-
+#if defined(__riscv)
+    ptrdiff_t trace_idx = 0;
+#endif
     pf   = fmt;
     pb   = buf;
     endb = buf + max - 1;
@@ -168,7 +170,18 @@ static void ucm_log_vsnprintf(char *buf, size_t max, const char *fmt, va_list ap
                 if (!value.s) {
                     value.s = "(null)";
                 }
+#if defined(__riscv)    
+               trace_idx = strstr(value.s, "TRACE") - value.s;
+               if(trace_idx > 0) {
+                    pad -= strnlen(value.s, trace_idx+6);
+               }
+               else if (trace_idx == 0) {
+                    pad -= strnlen(value.s, trace_idx);
+               }
+#else
+		/* this strlen causes a segfault on RISCV64 */
                 pad -= strlen(value.s);
+#endif
                 if (!(flags & UCM_LOG_LTOA_PAD_LEFT)) {
                     pb = ucm_log_add_padding(pb, endb, pad, ' ');
                 }
