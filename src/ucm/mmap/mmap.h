@@ -22,10 +22,6 @@
 #  define UCM_DEFAULT_HOOK_MODE_STR UCM_MMAP_HOOK_RELOC_STR
 #endif
 
-#if defined(__riscv)
-#include <stdio.h>
-#endif
-
 ucs_status_t ucm_mmap_install(int events, int exclusive);
 
 void *ucm_override_mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
