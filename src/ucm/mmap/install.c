@@ -35,6 +35,19 @@
 #define UCM_HOOK_STR \
     ((ucm_mmap_hook_mode() == UCM_MMAP_HOOK_RELOC) ?  "reloc" : "bistro")
 
+#if defined(__riscv)
+#define UCM_FIRE_EVENT(_event, _mask, _data, _call)                           \
+    do {                                                                      \
+        int exp_events = (_event) & (_mask);                                  \
+        (_data)->fired_events = 0;                                            \
+        _call;                                                                \
+        /* in case if any event is missed - set corresponding bit to 0     */ \
+        /* same as equation:                                               */ \
+        /* (_data)->out_events &= ~(exp_events ^                           */ \
+        /*                          ((_data)->fired_events & exp_events)); */ \
+        (_data)->out_events &= ~exp_events | (_data)->fired_events;           \
+    } while(0)
+#else
 #define UCM_FIRE_EVENT(_event, _mask, _data, _call)                           \
     do {                                                                      \
         int exp_events = (_event) & (_mask);                                  \
@@ -48,6 +61,7 @@
         /*                          ((_data)->fired_events & exp_events)); */ \
         (_data)->out_events &= ~exp_events | (_data)->fired_events;           \
     } while(0)
+#endif
 
 #define UCM_MMAP_EVENT_NAME_ENTRY(_event) \
     [ucs_ilog2(UCM_EVENT_##_event)] = #_event

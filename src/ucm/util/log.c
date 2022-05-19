@@ -132,6 +132,9 @@ static void ucm_log_vsnprintf(char *buf, size_t max, const char *fmt, va_list ap
     int pad;
     int base;
     int eno;
+#if defined(__riscv)
+    ptrdiff_t trace_idx = 0;
+#endif
 
     pf   = fmt;
     pb   = buf;
@@ -168,7 +171,19 @@ static void ucm_log_vsnprintf(char *buf, size_t max, const char *fmt, va_list ap
                 if (!value.s) {
                     value.s = "(null)";
                 }
+#if defined(__riscv)    
+               printf("ucm_log_vsnprintf\t%s\n", value.s); fflush(stdout);
+               trace_idx = strstr(value.s, "TRACE") - value.s;
+               if(trace_idx > 0) {
+                    pad -= strnlen(value.s, trace_idx+6);
+               }
+               else if (trace_idx == 0) {
+                    pad -= strnlen(value.s, trace_idx);
+               }
+#else
+		/* this strlen causes a segfault on RISCV64 */
                 pad -= strlen(value.s);
+#endif
                 if (!(flags & UCM_LOG_LTOA_PAD_LEFT)) {
                     pb = ucm_log_add_padding(pb, endb, pad, ' ');
                 }
@@ -277,6 +292,9 @@ void __ucm_log(const char *file, unsigned line, const char *function,
 
     length = strlen(buf);
     va_start(ap, message);
+#if defined (__riscv)
+    printf("__ucm_log\tDEBUG\t%s\n", buf); fflush(stdout);
+#endif
     ucm_log_vsnprintf(buf + length, UCM_LOG_BUG_SIZE - length, message, ap);
     va_end(ap);
     strncat(buf, "\n", UCM_LOG_BUG_SIZE - 1);

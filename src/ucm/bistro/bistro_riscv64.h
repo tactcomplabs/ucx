@@ -16,12 +16,22 @@
 #define UCM_BISTRO_PROLOGUE
 #define UCM_BISTRO_EPILOGUE
 
+/*
+ * variable encoding for `ucm_bistro_patch_t`
+ * instruction_(hi/lo)_(hi/lo)
+ *
+ * instruction -> rv64 instruction
+ * (hi/lo)     -> `hi` means upper 32 bits, `lo` means lower 32 bits
+ * (hi/lo)     -> `hi` means upper 32 bits, `lo` means lower 12 bits
+ */
+
 typedef struct ucm_bistro_patch {
-    uint32_t addi;
-    uint32_t sdra;
-    uint32_t addifp;
-    uint32_t auipc;
-    uint32_t jalr;
+    uint32_t rega;              /* load bits 63-43          */
+    uint32_t regb;              /* add bits 43-31           */
+    uint32_t regc;              /* load bits 30-11          */
+    uint32_t regd;              /* shift upper 32 bits left */
+    uint32_t rege;              /* add bits 10-0            */
+    uint32_t regf;              /* perform jump             */
 } UCS_S_PACKED ucm_bistro_patch_t;
 
 /**
