@@ -17,6 +17,13 @@
 #define UCP_PROTO_COMMON_OFFSET_INVALID PTRDIFF_MAX
 
 
+/* Common protocol description strings */
+#define UCP_PROTO_SHORT_DESC    "short"
+#define UCP_PROTO_COPY_IN_DESC  "copy-in"
+#define UCP_PROTO_COPY_OUT_DESC "copy-out"
+#define UCP_PROTO_ZCOPY_DESC    "zero-copy"
+
+
 typedef enum {
     /* Send buffer is used by zero-copy operations */
     UCP_PROTO_COMMON_INIT_FLAG_SEND_ZCOPY    = UCS_BIT(0),
@@ -69,6 +76,9 @@ typedef struct {
 
     /* Maximal payload size */
     size_t                  max_length;
+
+    /* Minimal number of iov */
+    size_t                  min_iov;
 
     /* Offset in uct_iface_attr_t structure of the field which specifies the
      * minimal fragment size for the UCT operation used by this protocol */
@@ -132,7 +142,7 @@ typedef struct {
 /* Private data per lane */
 typedef struct {
     ucp_lane_index_t        lane;       /* Lane index in the endpoint */
-    ucp_rsc_index_t         memh_index; /* Index of UCT memory handle (for zero copy) */
+    ucp_rsc_index_t         md_index;   /* Index of UCT memory handle (for zero copy) */
     ucp_md_index_t          rkey_index; /* Remote key index (for remote access) */
     uint8_t                 max_iov;    /* Maximal number of IOVs on this lane */
 } ucp_proto_common_lane_priv_t;
@@ -163,7 +173,9 @@ void ucp_proto_common_lane_priv_init(const ucp_proto_common_init_params_t *param
                                      ucp_proto_common_lane_priv_t *lane_priv);
 
 
-void ucp_proto_common_lane_priv_str(const ucp_proto_common_lane_priv_t *lpriv,
+void ucp_proto_common_lane_priv_str(const ucp_proto_query_params_t *params,
+                                    const ucp_proto_common_lane_priv_t *lpriv,
+                                    int show_rsc, int show_path,
                                     ucs_string_buffer_t *strb);
 
 

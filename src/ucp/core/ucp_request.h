@@ -326,6 +326,8 @@ struct ucp_request {
                     /* Progress ID, if it's UCS_CALLBACKQ_ID_NULL, no operations
                      * are in-progress */
                     uct_worker_cb_id_t cb_id;
+                    /* Index of UCT EP to be flushed and destroyed */
+                    ucp_rsc_index_t    rsc_index;
                 } discard_uct_ep;
 
                 struct {
@@ -376,6 +378,7 @@ struct ucp_request {
             ucp_datatype_t        datatype; /* Receive type */
             size_t                length;   /* Total length, in bytes */
             ucs_memory_type_t     mem_type; /* Memory type */
+            uint32_t              op_attr;  /* Operation attributes */
             ucp_dt_state_t        state;
             ucp_worker_t          *worker;
             uct_tag_context_t     uct_ctx;  /* Transport offload context */

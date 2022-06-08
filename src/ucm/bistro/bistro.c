@@ -12,11 +12,12 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 #include <ucm/bistro/bistro.h>
 #include <ucm/bistro/bistro_int.h>
 #include <ucs/sys/math.h>
-
 
 ucs_status_t ucm_bistro_remove_restore_point(ucm_bistro_restore_point_t *rp)
 {
@@ -54,7 +55,13 @@ ucs_status_t ucm_bistro_apply_patch(void *dst, void *patch, size_t len)
         return status;
     }
 
+#if defined(__riscv)
+    __sync_synchronize();
     memcpy(dst, patch, len);
+    __sync_synchronize();
+#else
+    memcpy(dst, patch, len);
+#endif
 
     status = ucm_bistro_protect(dst, len, UCM_PROT_READ_EXEC);
     if (!UCS_STATUS_IS_ERR(status)) {
@@ -88,8 +95,13 @@ ucs_status_t ucm_bistro_create_restore_point(void *addr, size_t len,
     *rp              = point;
     point->addr      = addr;
     point->patch_len = len;
+#if defined(__riscv)
+    __sync_synchronize();
     memcpy(point->orig, addr, len);
-
+    __sync_synchronize();
+#else
+    memcpy(point->orig, addr, len);
+#endif
     return UCS_OK;
 }
 

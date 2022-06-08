@@ -80,8 +80,9 @@ UCS_ARRAY_DECLARE_TYPE(string_buffer, size_t, char)
 
 
 #define UCS_STRING_BUFFER_ONSTACK(_var, _capacity) \
-    UCS_STRING_BUFFER_FIXED(_var, UCS_ARRAY_ALLOC_ONSTACK(string_buffer, _capacity), \
-                            _capacity) \
+    UCS_STRING_BUFFER_FIXED(_var, \
+                            UCS_ARRAY_ALLOC_ONSTACK(string_buffer, _capacity), \
+                            _capacity)
 
 
 /**
@@ -252,6 +253,16 @@ char *ucs_string_buffer_extract_mem(ucs_string_buffer_t *strb);
  */
 char *ucs_string_buffer_next_token(ucs_string_buffer_t *strb, char *token,
                                    const char *delimiters);
+
+
+/**
+ * Append repeat character to a string buffer.
+ *
+ * @param [inout] strb     String buffer to append characters to.
+ * @param [in]    c        Character to append.
+ * @param [in]    count    Number of times to append @a c.
+ */
+void ucs_string_buffer_appendc(ucs_string_buffer_t *strb, int c, size_t count);
 
 
 /**

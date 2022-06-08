@@ -16,13 +16,15 @@ extern "C" {
 }
 
 
-#define TEST_UD_PROGRESS_TIMEOUT 300.0
-#define TEST_UD_TIMEOUT_IN_SEC   10.0
+#define TEST_UD_PROGRESS_TIMEOUT      300.0
+#define TEST_UD_LINGER_TIMEOUT_IN_SEC 10.0
 
 
 class ud_base_test : public uct_test {
 public:
     virtual void init();
+
+    virtual uct_error_handler_t get_err_handler() const;
 
     uct_ud_ep_t *ep(entity *e);
 

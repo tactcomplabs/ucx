@@ -119,7 +119,7 @@ static ucs_status_t uct_self_iface_query(uct_iface_h tl_iface, uct_iface_attr_t 
     attr->cap.am.max_hdr          = 0;
     attr->cap.am.max_iov          = SIZE_MAX;
 
-    attr->latency                 = ucs_linear_func_make(0, 0);
+    attr->latency                 = UCS_LINEAR_FUNC_ZERO;
     attr->bandwidth.dedicated     = 6911.0 * UCS_MBYTE;
     attr->bandwidth.shared        = 0;
     attr->overhead                = 10e-9;
@@ -252,8 +252,13 @@ uct_self_query_tl_devices(uct_md_h md, uct_tl_device_resource_t **tl_devices_p,
     }
 
     for (i = 0; i < self_md->num_devices; i++) {
-        ucs_snprintf_zero(devices[i].name, sizeof(devices->name), "%s%d",
-                          UCT_SM_DEVICE_NAME, i);
+        if (self_md->num_devices > 1) {
+            ucs_snprintf_zero(devices[i].name, sizeof(devices->name), "%s%d",
+                              UCT_SM_DEVICE_NAME, i);
+        } else {
+            ucs_strncpy_zero(devices[i].name, UCT_SM_DEVICE_NAME,
+                             sizeof(devices->name));
+        }
         devices[i].type       = UCT_DEVICE_TYPE_SELF;
         devices[i].sys_device = UCS_SYS_DEVICE_ID_UNKNOWN;
     }
@@ -379,21 +384,19 @@ static uct_iface_ops_t uct_self_iface_ops = {
     .iface_is_reachable       = uct_self_iface_is_reachable
 };
 
-UCT_TL_DEFINE(&uct_self_component, self, uct_self_query_tl_devices, uct_self_iface_t,
-              "SELF_", uct_self_iface_config_table, uct_self_iface_config_t);
-
 static ucs_status_t uct_self_md_query(uct_md_h md, uct_md_attr_t *attr)
 {
     /* Dummy memory registration provided. No real memory handling exists */
     attr->cap.flags            = UCT_MD_FLAG_REG |
                                  UCT_MD_FLAG_NEED_RKEY; /* TODO ignore rkey in rma/amo ops */
     attr->cap.reg_mem_types    = UCS_BIT(UCS_MEMORY_TYPE_HOST);
+    attr->cap.alloc_mem_types  = 0;
     attr->cap.detect_mem_types = 0;
     attr->cap.access_mem_types = UCS_BIT(UCS_MEMORY_TYPE_HOST);
     attr->cap.max_alloc        = 0;
     attr->cap.max_reg          = ULONG_MAX;
     attr->rkey_packed_size     = 0;
-    attr->reg_cost             = ucs_linear_func_make(0, 0);
+    attr->reg_cost             = UCS_LINEAR_FUNC_ZERO;
     memset(&attr->local_cpus, 0xff, sizeof(attr->local_cpus));
     return UCS_OK;
 }
@@ -472,4 +475,9 @@ static uct_component_t uct_self_component = {
     .flags              = 0,
     .md_vfs_init        = (uct_component_md_vfs_init_func_t)ucs_empty_function
 };
-UCT_COMPONENT_REGISTER(&uct_self_component);
+
+UCT_TL_DEFINE_ENTRY(&uct_self_component, self, uct_self_query_tl_devices,
+                    uct_self_iface_t, "SELF_", uct_self_iface_config_table,
+                    uct_self_iface_config_t);
+
+UCT_SINGLE_TL_INIT(&uct_self_component, self,,,)

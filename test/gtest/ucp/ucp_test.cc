@@ -15,7 +15,6 @@ extern "C" {
 #include <uct/ib/ud/base/ud_iface.h>
 #endif
 #include <ucs/arch/atomic.h>
-#include <ucs/stats/stats.h>
 }
 
 #include <queue>
@@ -401,7 +400,7 @@ int ucp_test::max_connections() {
     }
 }
 
-void ucp_test::set_tl_small_timeouts()
+void ucp_test::configure_peer_failure_settings()
 {
     /* Set small TL timeouts to reduce testing time */
     m_env.push_back(new ucs::scoped_setenv("UCX_RC_TIMEOUT",     "10ms"));
@@ -561,23 +560,6 @@ void ucp_test::modify_config(const std::string& name, const std::string& value,
                            << ucs_status_string(status));
         }
     }
-}
-
-void ucp_test::stats_activate()
-{
-    ucs_stats_cleanup();
-    push_config();
-    modify_config("STATS_DEST",    "file:/dev/null");
-    modify_config("STATS_TRIGGER", "exit");
-    ucs_stats_init();
-    ASSERT_TRUE(ucs_stats_is_active());
-}
-
-void ucp_test::stats_restore()
-{
-    ucs_stats_cleanup();
-    pop_config();
-    ucs_stats_init();
 }
 
 bool ucp_test::check_tls(const std::string& tls)
@@ -1113,7 +1095,7 @@ void ucp_test_base::entity::warn_existing_eps() const {
     }
 }
 
-double ucp_test_base::entity::set_ib_ud_timeout(double timeout_sec)
+double ucp_test_base::entity::set_ib_ud_peer_timeout(double timeout_sec)
 {
     double prev_timeout_sec = 0.;
 #if HAVE_IB
