@@ -36,6 +36,7 @@ typedef enum ucs_cpu_model {
     UCS_CPU_MODEL_ZHAOXIN_ZHANGJIANG,
     UCS_CPU_MODEL_ZHAOXIN_WUDAOKOU,
     UCS_CPU_MODEL_ZHAOXIN_LUJIAZUI,
+    UCS_CPU_MODEL_RV64G,
     UCS_CPU_MODEL_RV64IMAFDC,
     UCS_CPU_MODEL_LAST
 } ucs_cpu_model_t;
@@ -67,7 +68,8 @@ typedef enum ucs_cpu_vendor {
     UCS_CPU_VENDOR_GENERIC_PPC,
     UCS_CPU_VENDOR_FUJITSU_ARM,
     UCS_CPU_VENDOR_ZHAOXIN,
-    UCS_CPU_VENDOR_GENERIC_RISCV,
+    UCS_CPU_VENDOR_GENERIC_RV64G,
+    UCS_CPU_VENDOR_GENERIC_RV64IMAFDC,
     UCS_CPU_VENDOR_LAST
 } ucs_cpu_vendor_t;
 
@@ -101,10 +103,7 @@ typedef struct ucs_cpu_builtin_memcpy {
 #  include "ppc64/cpu.h"
 #elif defined(__aarch64__)
 #  include "aarch64/cpu.h"
-#elif defined(__riscv)
-#  ifdef HAVE___CLEAR_CACHE
-#  undef HAVE___CLEAR_CACHE
-#  endif
+#elif defined(__riscv) && __riscv_xlen == 64
 #  include "riscv/cpu.h"
 #else
 #  error "Unsupported architecture"
@@ -161,7 +160,14 @@ double ucs_cpu_get_memcpy_bw();
 
 static inline int ucs_cpu_prefer_relaxed_order()
 {
-    return ucs_arch_get_cpu_vendor() == UCS_CPU_VENDOR_FUJITSU_ARM;
+    ucs_cpu_vendor_t cpu_vendor = ucs_arch_get_cpu_vendor();
+    ucs_cpu_model_t cpu_model   = ucs_arch_get_cpu_model();
+
+    return (cpu_vendor == UCS_CPU_VENDOR_FUJITSU_ARM) ||
+           ((cpu_vendor == UCS_CPU_VENDOR_AMD) &&
+            ((cpu_model == UCS_CPU_MODEL_AMD_NAPLES) ||
+             (cpu_model == UCS_CPU_MODEL_AMD_ROME) ||
+             (cpu_model == UCS_CPU_MODEL_AMD_MILAN)));
 }
 
 

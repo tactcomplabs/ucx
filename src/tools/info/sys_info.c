@@ -38,6 +38,7 @@ static const char *cpu_model_names[] = {
     [UCS_CPU_MODEL_ZHAOXIN_ZHANGJIANG] = "Zhangjiang",
     [UCS_CPU_MODEL_ZHAOXIN_WUDAOKOU]   = "Wudaokou",
     [UCS_CPU_MODEL_ZHAOXIN_LUJIAZUI]   = "Lujiazui",
+    [UCS_CPU_MODEL_RV64G]              = "RV64G",
     [UCS_CPU_MODEL_RV64IMAFDC]         = "RV64IMAFDC"
 };
 
@@ -47,7 +48,8 @@ static const char* cpu_vendor_names[] = {
     [UCS_CPU_VENDOR_AMD]                = "AMD",
     [UCS_CPU_VENDOR_GENERIC_ARM]        = "Generic ARM",
     [UCS_CPU_VENDOR_GENERIC_PPC]        = "Generic PPC",
-    [UCS_CPU_VENDOR_GENERIC_RISCV]      = "Generic RISCV",
+    [UCS_CPU_VENDOR_GENERIC_RV64G]      = "Generic RV64G",
+    [UCS_CPU_MODEL_RV64IMAFDC]          = "Generic RV64IMAFDC",
     [UCS_CPU_VENDOR_FUJITSU_ARM]        = "Fujitsu ARM",
     [UCS_CPU_VENDOR_ZHAOXIN]            = "Zhaoxin"
 };

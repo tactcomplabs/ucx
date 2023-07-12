@@ -76,6 +76,7 @@ static inline ucs_status_t ucs_arch_get_cache_size(size_t *cache_sizes)
 #if !HAVE___CLEAR_CACHE
 static inline void ucs_arch_clear_cache(void *start, void *end)
 {
+    __asm__ __volatile__ ("fence" : : :);
     __riscv_flush_icache(start, end, 0);
 }
 #endif

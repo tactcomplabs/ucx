@@ -1,5 +1,6 @@
 /**
 * Copyright (C) Mellanox Technologies Ltd. 2001-2014.  ALL RIGHTS RESERVED.
+* Copyright (C) Tactical Computing Labs, LLC. 2022. ALL RIGHTS RESERVED.
 *
 * See file LICENSE for terms.
 */
@@ -48,6 +49,7 @@ static UCS_F_NOOPTIMIZE void ucs_check_cpu_flags(void)
         { "sse42", UCS_CPU_FLAG_SSE42 },
         { "avx", UCS_CPU_FLAG_AVX },
         { "avx2", UCS_CPU_FLAG_AVX2 },
+	{ "rv64g", UCS_CPU_MODEL_RV64G },
         { NULL, UCS_CPU_FLAG_UNKNOWN },
     };
 
@@ -88,7 +90,7 @@ static void ucs_modules_load()
     UCS_MODULE_FRAMEWORK_LOAD(ucs, UCS_MODULE_LOAD_FLAG_GLOBAL);
 }
 
-static void UCS_F_CTOR ucs_init()
+void UCS_F_CTOR ucs_init()
 {
     ucs_status_t status;
 

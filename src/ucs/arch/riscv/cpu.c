@@ -66,7 +66,7 @@ ucs_cpu_vendor_t ucs_arch_get_cpu_vendor()
     ucs_rv64_cpuid_t cpuid;
     ucs_rv64_cpuid(&cpuid);
 
-    return UCS_CPU_VENDOR_GENERIC_RISCV;
+    return UCS_CPU_VENDOR_GENERIC_RV64G;
 }
 
 #endif

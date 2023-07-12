@@ -3,6 +3,7 @@
 # Copyright (c) UT-Battelle, LLC. 2017. ALL RIGHTS RESERVED.
 # Copyright (C) ARM Ltd. 2016-2020.  ALL RIGHTS RESERVED.
 # Copyright (C) NextSilicon Ltd. 2021.  ALL RIGHTS RESERVED.
+# Copyright (C) Tactical Computing Labs, LLC. 2022. ALL RIGHTS RESERVED.
 # See file LICENSE for terms.
 #
 
@@ -152,9 +153,19 @@ AC_DEFUN([DETECT_UARCH],
     cpuvar=`grep 'CPU variant' /proc/cpuinfo 2> /dev/null | cut -d: -f2 | tr -d " " | head -n 1`
     cpupart=`grep 'CPU part' /proc/cpuinfo 2> /dev/null | cut -d: -f2 | tr -d " " | head -n 1`
    
+    case "$cpuimpl" in
+       "")
+       cpuimpl=`grep 'uarch' /proc/cpuinfo 2> /dev/null | cut -d: -f2 | tr -d " " | head -n 1`
+       cpuarch=`grep 'isa' /proc/cpuinfo 2> /dev/null | cut -d: -f2 | tr -d " " | head -n 1`
+       cpuvar=`grep 'isa' /proc/cpuinfo 2> /dev/null | cut -d: -f2 | tr -d " " | head -n 1`
+       cpupart=`grep 'uarch' /proc/cpuinfo 2> /dev/null | cut -d: -f2 | tr -d " " | head -n 1`
+       ;;
+    esac
+
+
     ax_cpu=""
     ax_arch=""
-    
+ 
     AC_MSG_NOTICE(Detected CPU implementation: ${cpuimpl})
     AC_MSG_NOTICE(Detected CPU architecture: ${cpuarch})
     AC_MSG_NOTICE(Detected CPU variant: ${cpuvar})

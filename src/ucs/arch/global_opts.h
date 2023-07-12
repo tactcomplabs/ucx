@@ -1,5 +1,6 @@
 /**
 * Copyright (C) Mellanox Technologies Ltd. 2019.  ALL RIGHTS RESERVED.
+* Copyright (C) Tactical Computing Labs, LLC. 2022. ALL RIGHTS RESERVED.
 *
 * See file LICENSE for terms.
 */
@@ -15,7 +16,7 @@
 #  include "ppc64/global_opts.h"
 #elif defined(__aarch64__)
 #  include "aarch64/global_opts.h"
-#elif defined(__riscv)
+#elif defined(__riscv) && __riscv_xlen == 64
 #  include "riscv/global_opts.h"
 #else
 #  error "Unsupported architecture"

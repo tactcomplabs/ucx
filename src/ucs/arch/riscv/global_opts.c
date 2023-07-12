@@ -4,7 +4,7 @@
 * See file LICENSE for terms.
 */
 
-#if defined(__riscv)
+#if defined(__riscv) && __riscv_xlen == 64
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

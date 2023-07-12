@@ -1,6 +1,7 @@
 /**
  * Copyright (C) Mellanox Technologies Ltd. 2001-2015.  ALL RIGHTS RESERVED.
  * Copyright (C) Advanced Micro Devices, Inc. 2019. ALL RIGHTS RESERVED.
+ * Copyright (C) Tactical Computing Labs, LLC. 2022. ALL RIGHTS RESERVED.
  *
  * See file LICENSE for terms.
  */
@@ -63,7 +64,7 @@ typedef enum ucm_event_type {
  * @brief MMAP hook modes
  */
 typedef enum ucm_mmap_hook_mode {
-    UCM_MMAP_HOOK_NONE,
+    UCM_MMAP_HOOK_NONE = 0,
     UCM_MMAP_HOOK_RELOC,
     UCM_MMAP_HOOK_BISTRO,
     UCM_MMAP_HOOK_LAST
@@ -74,7 +75,7 @@ typedef enum ucm_mmap_hook_mode {
  * @brief UCM module unload prevent mode
  */
 typedef enum ucm_module_unload_prevent_mode {
-    UCM_UNLOAD_PREVENT_MODE_LAZY,
+    UCM_UNLOAD_PREVENT_MODE_LAZY = 0,
     UCM_UNLOAD_PREVENT_MODE_NOW,
     UCM_UNLOAD_PREVENT_MODE_NONE,
     UCM_UNLOAD_PREVENT_MODE_LAST

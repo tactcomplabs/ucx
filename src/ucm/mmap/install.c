@@ -1,6 +1,7 @@
 /**
  * Copyright (C) Mellanox Technologies Ltd. 2001-2015.  ALL RIGHTS RESERVED.
  * Copyright (C) ARM Ltd. 2016.  ALL RIGHTS RESERVED.
+ * Copyright (C) Tactical Computing Labs, LLC. 2022. ALL RIGHTS RESERVED.
  *
  * See file LICENSE for terms.
  */
@@ -31,26 +32,9 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#if defined(__riscv)
-#include <ucs/arch/cpu.h>
-#endif
-
 #define UCM_HOOK_STR \
     ((ucm_mmap_hook_mode() == UCM_MMAP_HOOK_RELOC) ?  "reloc" : "bistro")
 
-#if defined(__riscv)
-#define UCM_FIRE_EVENT(_event, _mask, _data, _call)                           \
-    do {                                                                      \
-        int exp_events = (_event) & (_mask);                                  \
-        (_data)->fired_events = 0;                                            \
-        _call;                                                                \
-        /* in case if any event is missed - set corresponding bit to 0     */ \
-        /* same as equation:                                               */ \
-        /* (_data)->out_events &= ~(exp_events ^                           */ \
-        /*                          ((_data)->fired_events & exp_events)); */ \
-        (_data)->out_events &= ~exp_events | (_data)->fired_events;           \
-    } while(0)
-#else
 #define UCM_FIRE_EVENT(_event, _mask, _data, _call)                           \
     do {                                                                      \
         int exp_events = (_event) & (_mask);                                  \
@@ -64,7 +48,6 @@
         /*                          ((_data)->fired_events & exp_events)); */ \
         (_data)->out_events &= ~exp_events | (_data)->fired_events;           \
     } while(0)
-#endif
 
 #define UCM_MMAP_EVENT_NAME_ENTRY(_event) \
     [ucs_ilog2(UCM_EVENT_##_event)] = #_event
@@ -168,11 +151,6 @@ ucm_fire_mmap_events_internal(int events, ucm_mmap_test_events_data_t *data,
     int shmid;
     void *p;
 
-#if defined(__riscv)
-    __sync_synchronize();
-    ucs_arch_clear_cache((void*)mmap, ((void*)mmap)+ucm_get_page_size());
-#endif
-
     if (events & (UCM_EVENT_MMAP|UCM_EVENT_MUNMAP|UCM_EVENT_MREMAP|
                   UCM_EVENT_VM_MAPPED|UCM_EVENT_VM_UNMAPPED)) {
         UCM_FIRE_EVENT(events, UCM_EVENT_MMAP|UCM_EVENT_VM_MAPPED,
@@ -194,11 +172,6 @@ ucm_fire_mmap_events_internal(int events, ucm_mmap_test_events_data_t *data,
         UCM_FIRE_EVENT(events, UCM_EVENT_MUNMAP|UCM_EVENT_VM_UNMAPPED,
                        data, munmap(p, ucm_get_page_size()));
     }
-
-#if defined(__riscv)
-    __sync_synchronize();
-    ucs_arch_clear_cache(p, p+ucm_get_page_size());
-#endif
 
     if (events & (UCM_EVENT_SHMAT|UCM_EVENT_SHMDT|UCM_EVENT_VM_MAPPED|UCM_EVENT_VM_UNMAPPED)) {
         shmid = shmget(IPC_PRIVATE, ucm_get_page_size(), IPC_CREAT | SHM_R | SHM_W);

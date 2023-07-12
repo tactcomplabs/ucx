@@ -1,5 +1,6 @@
 /**
  * Copyright (C) Mellanox Technologies Ltd. 2018.       ALL RIGHTS RESERVED.
+ * Copyright (C) Tactical Computing Labs, LLC. 2022. ALL RIGHTS RESERVED.
  *
  * See file LICENSE for terms.
  */
@@ -45,6 +46,12 @@ static ucs_status_t ucm_bistro_protect(void *addr, size_t len, int prot)
     return UCS_OK;
 }
 
+#if defined(__riscv) && __riscv_xlen == 64
+#define SYSTEM_PAGE_SIZE 4096
+#else
+#define SYSTEM_PAGE_SIZE ucm_get_page_size()
+#endif
+
 ucs_status_t ucm_bistro_apply_patch(void *dst, void *patch, size_t len)
 {
     ucs_status_t status;
@@ -54,15 +61,10 @@ ucs_status_t ucm_bistro_apply_patch(void *dst, void *patch, size_t len)
         return status;
     }
 
-#if defined(__riscv)
-    __sync_synchronize();
     memcpy(dst, patch, len);
-    __sync_synchronize();
-#else
-    memcpy(dst, patch, len);
-#endif
 
     status = ucm_bistro_protect(dst, len, UCM_PROT_READ_EXEC);
+
     if (!UCS_STATUS_IS_ERR(status)) {
         ucs_clear_cache(dst, UCS_PTR_BYTE_OFFSET(dst, len));
     }
@@ -94,13 +96,12 @@ ucs_status_t ucm_bistro_create_restore_point(void *addr, size_t len,
     *rp              = point;
     point->addr      = addr;
     point->patch_len = len;
-#if defined(__riscv)
-    __sync_synchronize();
-    memcpy(point->orig, addr, len);
-    __sync_synchronize();
-#else
-    memcpy(point->orig, addr, len);
+    memcpy(point->orig, addr, point->patch_len);
+
+#if defined(__riscv) && __riscv_xlen == 64
+    ucs_clear_cache(point->orig, UCS_PTR_BYTE_OFFSET(point->orig, len));
 #endif
+
     return UCS_OK;
 }
 
