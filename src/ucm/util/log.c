@@ -132,7 +132,6 @@ static void ucm_log_vsnprintf(char *buf, size_t max, const char *fmt, va_list ap
     int pad;
     int base;
     int eno;
-
     pf   = fmt;
     pb   = buf;
     endb = buf + max - 1;
@@ -168,7 +167,10 @@ static void ucm_log_vsnprintf(char *buf, size_t max, const char *fmt, va_list ap
                 if (!value.s) {
                     value.s = "(null)";
                 }
+
+		/* this strlen causes a segfault on RISCV64 */
                 pad -= strlen(value.s);
+
                 if (!(flags & UCM_LOG_LTOA_PAD_LEFT)) {
                     pb = ucm_log_add_padding(pb, endb, pad, ' ');
                 }
@@ -261,24 +263,22 @@ void __ucm_log(const char *file, unsigned line, const char *function,
 {
     char buf[UCM_LOG_BUG_SIZE];
     size_t length;
-    va_list ap;
     struct timeval tv;
     ssize_t nwrite;
     pid_t pid;
+    static char * fmt = "[%lu.%06lu] [%s:%d:%d] %18s:%-4d UCX  %s \0";
+    static char * nullstr = "(null)";
 
     gettimeofday(&tv, NULL);
     pid = getpid();
-    ucm_log_snprintf(buf, UCM_LOG_BUG_SIZE - 1,
-                     "[%lu.%06lu] [%s:%d:%d] %18s:%-4d UCX  %s ",
+    ucm_log_snprintf(buf, UCM_LOG_BUG_SIZE - 1, fmt,
                      tv.tv_sec, tv.tv_usec, ucm_log_hostname, pid,
                      ucm_get_tid() - pid, ucs_basename(file), line,
                      ucm_log_level_names[level]);
     buf[UCM_LOG_BUG_SIZE - 1] = '\0';
 
     length = strlen(buf);
-    va_start(ap, message);
-    ucm_log_vsnprintf(buf + length, UCM_LOG_BUG_SIZE - length, message, ap);
-    va_end(ap);
+    ucm_log_snprintf(buf + length, UCM_LOG_BUG_SIZE - length, message, nullstr);
     strncat(buf, "\n", UCM_LOG_BUG_SIZE - 1);
 
     /* Use write to avoid potential calls to malloc() in buffered IO functions */

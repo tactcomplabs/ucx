@@ -366,7 +366,7 @@ char *ucm_concat_path(char *buffer, size_t max, const char *dir, const char *fil
 
 void *ucm_brk_syscall(void *addr)
 {
-    void *result;
+    void *result = NULL;
 
 #ifdef __x86_64__
     asm volatile("mov %1, %%rdi\n\t"
@@ -391,4 +391,3 @@ void UCS_F_CTOR ucm_init()
     ucm_init_log();
     ucm_init_malloc_hook();
 }
-

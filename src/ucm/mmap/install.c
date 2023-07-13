@@ -1,6 +1,7 @@
 /**
  * Copyright (C) Mellanox Technologies Ltd. 2001-2015.  ALL RIGHTS RESERVED.
  * Copyright (C) ARM Ltd. 2016.  ALL RIGHTS RESERVED.
+ * Copyright (C) Tactical Computing Labs, LLC. 2022. ALL RIGHTS RESERVED.
  *
  * See file LICENSE for terms.
  */
@@ -30,7 +31,6 @@
 #include <sys/shm.h>
 #include <unistd.h>
 #include <pthread.h>
-
 
 #define UCM_HOOK_STR \
     ((ucm_mmap_hook_mode() == UCM_MMAP_HOOK_RELOC) ?  "reloc" : "bistro")
